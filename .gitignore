@@ -1,0 +1,29 @@
+# Ignore build directory
+/build/
+
+# Ignore object files and compiled binaries
+*.o
+*.out
+*.a
+*.so
+*.exe
+
+# Ignore debug and core dump files
+*.dSYM/
+*.core
+core.*
+
+# Ignore temporary files created by editors and OS
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+*.cache
+
+# Ignore dependency resolution files
+.deps/
+*.d
+
+# Ignore Makefile-generated files
+Makefile~
