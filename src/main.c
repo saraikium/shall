@@ -1,6 +1,6 @@
 #include "shall.h"
 
-int main(int argc, char *argv[]) {
+int main(void) {
   while (1) {
     printf("$ ");
     // Flush after every printf
