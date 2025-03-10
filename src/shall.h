@@ -1,6 +1,10 @@
 #ifndef SHALL_H
 #define SHALL_H
 
+// Ensure POSIX functions like strdup() are available
+#define _POSIX_C_SOURCE 200809L
+#define __GNU_SOURCE
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
