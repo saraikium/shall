@@ -1,12 +1,16 @@
 #include "builtins.h"
 #include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 // List of built-in commands with min & max argument constraints
 const builtin_t builtin_commands[BUILTIN_COUNT] = {
-    {"echo", 0, -1}, // echo requires at least 1 arg, no upper limit
-    {"type", 0, -1}, // type requires exactly 1 argument
-    {"pwd", 0, 0},   // pwd takes no arguments
-    {"exit", 0, 1},  // exit can take 0 or 1 argument
+    {"echo", 0, NO_ARG_LIMIT}, // echo requires at least 1 arg, no upper limit
+    {"type", 0, NO_ARG_LIMIT}, // type requires exactly 1 argument
+    {"pwd", 0, 0},             // pwd takes no arguments
+    {"exit", 0, 1},            // exit can take 0 or 1 argument
+    {"cd", 0, 1},              // cd takes 0 or 1 argument
 };
 
 int is_builtin(command_t *cmd) {
@@ -104,6 +108,24 @@ void builtin_type(command_t *cmd) {
   fflush(stdout);
 }
 
+void builtin_cd(const command_t *cmd) {
+  char *path = cmd->argc > 1 ? cmd->argv[1] : getenv("HOME");
+
+  if (path == NULL) {
+    fprintf(stderr, "cd: Home not set\n");
+    return;
+  }
+  if (path[0] == '~' && (path[1] == '/' || path[1] == '\0')) {
+    char expanded_path[1024];
+    const char *home = getenv("HOME");
+    snprintf(expanded_path, sizeof(expanded_path), "%s%s", home, path + 1);
+    path = expanded_path;
+  }
+  if (chdir(path) != 0) {
+    perror("cd");
+  }
+}
+
 int handle_builtin(command_t *cmd) {
   const builtin_t *builtin = get_builtin(cmd->name);
   if (builtin == NULL)
@@ -120,6 +142,9 @@ int handle_builtin(command_t *cmd) {
     return 1;
   } else if (strcmp(cmd->name, "type") == 0) {
     builtin_type(cmd);
+    return 1;
+  } else if (strcmp(cmd->name, "cd") == 0) {
+    builtin_cd(cmd);
     return 1;
   }
   return 0; // Not handled

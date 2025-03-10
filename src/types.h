@@ -13,7 +13,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define BUILTIN_COUNT 4
+#define BUILTIN_COUNT 5
+#define NO_ARG_LIMIT -1
 
 typedef struct {
   int argc;
