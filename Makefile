@@ -7,32 +7,27 @@ SRC_DIR = src
 BUILD_DIR = build
 TARGET = $(BUILD_DIR)/shall
 
-# Source and object files
-SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+# Hardcoded source and object files
+SRCS = src/main.c src/shall.c
+OBJS = build/main.o build/shall.o
 
-# Debug output
-$(info SRCS: $(SRCS))
-$(info OBJS: $(OBJS))
-
-# Ensure the build directory exists
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-# Default target
-all: $(TARGET)
-
-# Build the executable
-$(TARGET): $(OBJS) 
+$(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-# Compile C source files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+# Ensure build directory exists
+build:
+	mkdir -p build
 
-# Clean build files
+# Compile each file explicitly
+build/main.o: src/main.c 
+	$(CC) $(CFLAGS) -c $< -o build/main.o
+
+build/shall.o: src/shall.c | build
+	$(CC) $(CFLAGS) -c $< -o build/shall.o
+
+
+# Clean up
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf build
 
-# Phony targets
-.PHONY: all clean $(BUILD_DIR)
+.PHONY: all clean build
