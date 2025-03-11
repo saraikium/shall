@@ -28,4 +28,8 @@ typedef struct {
   int max_argc; // Maximum allowed arguments (-1 means no limit)
 } builtin_t;
 
+typedef struct {
+  char* literal;
+} token_t;
+
 #endif /* TYPES_H */
