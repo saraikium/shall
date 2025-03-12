@@ -27,3 +27,6 @@ core.*
 
 # Ignore Makefile-generated files
 Makefile~
+
+# Ignore Valgrind core dumps
+vgcore.*
