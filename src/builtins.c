@@ -154,7 +154,7 @@ run_builtin_with_redirection(const command_t *cmd,
     int fd_out = open(cmd->outfile, flags, 0644);
     if (fd_out < 0) {
       perror("open outfile");
-      return; // same note about restore
+      return;
     }
     dup2(fd_out, STDOUT_FILENO);
     close(fd_out);
@@ -182,8 +182,7 @@ int handle_builtin(const command_t *cmd) {
     run_builtin_with_redirection(cmd, (void (*)(const command_t *))builtin_pwd);
     return 1;
   } else if (strcmp(cmd->name, "exit") == 0) {
-    // 'exit' can't restore FDs if we kill the shell.
-    run_builtin_with_redirection(cmd, builtin_exit);
+    builtin_exit(cmd);
     return 1;
   } else if (strcmp(cmd->name, "type") == 0) {
     run_builtin_with_redirection(cmd, builtin_type);
