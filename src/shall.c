@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "shall.h"
 #include "utils.h"
+#include <stdio.h>
 
 void clean_input(char *input, int buffer_size) {
   if (fgets(input, buffer_size, stdin) != NULL) {
@@ -15,15 +16,32 @@ void clean_input(char *input, int buffer_size) {
 
 // Cleanup function to free allocated memory
 void free_command(command_t *cmd) {
-  if (!cmd)
+  if (cmd == NULL)
     return;
-  for (int i = 0; cmd->argv[i] != NULL; i++) {
-    free(cmd->argv[i]);
+  // Free argv array safely
+  if (cmd->argv) {
+    for (int i = 0; cmd->argv[i] != NULL; i++) {
+      free(cmd->argv[i]);
+      cmd->argv[i] = NULL; // Prevent dangling pointer
+    }
+    free(cmd->argv);
+    cmd->argv = NULL;
   }
-  free(cmd->argv);
-  free(cmd->infile);
-  free(cmd->outfile);
-  free(cmd);
+
+  // Free infile if it was allocated
+  if (cmd->infile) {
+    free(cmd->infile);
+    cmd->infile = NULL;
+  }
+
+  // Free outfile if it was allocated
+  if (cmd->outfile) {
+    free(cmd->outfile);
+    cmd->outfile = NULL;
+  }
+
+  free(cmd);  // Free the struct itself
+  cmd = NULL; // Prevent accidental use after free
 }
 
 void handle_input(const char *input) {

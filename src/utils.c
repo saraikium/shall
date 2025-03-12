@@ -34,11 +34,8 @@ void fork_and_exec_cmd(command_t *cmd, char *full_path) {
   }
 
   if (pid == 0) {
-    char *infile = strdup(cmd->infile);
-    char *outfile = strdup(cmd->outfile);
-    int append_out = cmd->append_out;
 
-    if (infile) {
+    if (cmd->infile) {
       int fd_in = open(cmd->infile, O_RDONLY);
       if (fd_in < 0) {
         perror("input file");
@@ -47,9 +44,9 @@ void fork_and_exec_cmd(command_t *cmd, char *full_path) {
       dup2(fd_in, STDIN_FILENO);
       close(fd_in);
     }
-    if (outfile) {
+    if (cmd->outfile) {
       int flags = O_WRONLY | O_CREAT;
-      flags |= append_out ? O_APPEND : O_TRUNC;
+      flags |= cmd->append_out ? O_APPEND : O_TRUNC;
 
       int fd_out = open(cmd->outfile, flags);
       if (fd_out < 0) {

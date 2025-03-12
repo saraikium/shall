@@ -129,6 +129,10 @@ command_t *parse_command(token_t *tokens, int num_tokens) {
   }
 
   memset(cmd, 0, sizeof(command_t));
+  cmd->infile = NULL;
+  cmd->outfile = NULL;
+  cmd->append_out = 0;
+  cmd->argc = 0;
   cmd->argv = malloc((num_tokens + 1) * sizeof(char *));
 
   if (!cmd->argv) {
@@ -175,8 +179,8 @@ command_t *parse_command(token_t *tokens, int num_tokens) {
     }
   }
 
-  cmd->argv[argc + 1] = NULL; // Null terminate
-  cmd->name = cmd->argv[0];   // First argument is command name
+  cmd->argv[argc] = NULL;   // Null terminate
+  cmd->name = cmd->argv[0]; // First argument is command name
   cmd->argc = argc;
 
   return cmd;
