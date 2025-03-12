@@ -1,4 +1,6 @@
 #include "parser.h"
+#include <stdio.h>
+#include <string.h>
 
 void free_tokens(token_t *tokens, int count) {
   if (!tokens)
@@ -126,7 +128,7 @@ command_t *parse_command(token_t *tokens, int num_tokens) {
     return NULL;
   }
 
-  cmd->argc = 0;
+  memset(cmd, 0, sizeof(command_t));
   cmd->argv = malloc((num_tokens + 1) * sizeof(char *));
 
   if (!cmd->argv) {
@@ -136,14 +138,46 @@ command_t *parse_command(token_t *tokens, int num_tokens) {
   }
 
   // Extract arguments
+  int argc = 0;
   for (int i = 0; i < num_tokens; i++) {
-    if (tokens[i].type == TOKEN_WORD) {
-      cmd->argv[cmd->argc++] = strdup(tokens[i].value);
+    switch (tokens[i].type) {
+    case TOKEN_WORD:
+      cmd->argv[argc++] = strdup(tokens[i].value);
+      break;
+    case TOKEN_REDIR_IN:
+      if (i + 1 < num_tokens && tokens[i + 1].type == TOKEN_WORD) {
+        cmd->infile = strdup(tokens[++i].value);
+      } else {
+        fprintf(stderr, "Syntax Error: expected filename after '<'\n");
+      }
+      break;
+
+    case TOKEN_REDIR_OUT:
+      if (i + 1 < num_tokens && tokens[i + 1].type == TOKEN_WORD) {
+        cmd->outfile = strdup(tokens[++i].value);
+        cmd->append_out = 0;
+      } else {
+        fprintf(stderr, "Syntax Error: expected filename after '>'\n");
+      }
+      break;
+
+    case TOKEN_REDIR_APPEND:
+      if (i + 1 < num_tokens && tokens[i + 1].type == TOKEN_WORD) {
+        cmd->outfile = strdup(tokens[++i].value);
+        cmd->append_out = 1;
+      } else {
+        fprintf(stderr, "Syntax error: expected file after '>>'\n");
+      }
+      break;
+    default:
+      // Ignore other values for now
+      break;
     }
   }
 
-  cmd->argv[cmd->argc] = NULL; // Null terminate
-  cmd->name = cmd->argv[0];    // First argument is command name
+  cmd->argv[argc + 1] = NULL; // Null terminate
+  cmd->name = cmd->argv[0];   // First argument is command name
+  cmd->argc = argc;
 
   return cmd;
 }

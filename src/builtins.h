@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-int handle_builtin(command_t *cmd);
-int is_builtin(command_t *cmd);
+int handle_builtin(const command_t *cmd);
+int is_builtin(const command_t *cmd);
 
 #endif /* BUILTINS_H */

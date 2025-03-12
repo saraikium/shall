@@ -13,7 +13,7 @@ const builtin_t builtin_commands[BUILTIN_COUNT] = {
     {"cd", 0, 1},              // cd takes 0 or 1 argument
 };
 
-int is_builtin(command_t *cmd) {
+int is_builtin(const command_t *cmd) {
   for (int i = 0; i < BUILTIN_COUNT; i++) {
     if (builtin_commands[i].name == cmd->name) {
       return 1;
@@ -41,7 +41,7 @@ int validate_builtin_args(const command_t *cmd, const builtin_t *builtin) {
   return 0;   // Valid argument count
 }
 
-void builtin_echo(command_t *cmd) {
+void builtin_echo(const command_t *cmd) {
   size_t total_length = 0;
   // Calculate total length for buffer
   for (int i = 1; i < cmd->argc; i++) {
@@ -76,7 +76,7 @@ void builtin_pwd() {
   }
 }
 
-void builtin_exit(command_t *cmd) {
+void builtin_exit(const command_t *cmd) {
   int exit_code = 0;
   errno = 0;
   if (cmd->argc > 1) {
@@ -89,7 +89,7 @@ void builtin_exit(command_t *cmd) {
   exit(exit_code);
 }
 
-void builtin_type(command_t *cmd) {
+void builtin_type(const command_t *cmd) {
   for (int i = 1; i < cmd->argc; i++) {
     // Should I free it? I'm confused here
     char *arg = cmd->argv[i];
@@ -126,25 +126,70 @@ void builtin_cd(const command_t *cmd) {
   }
 }
 
-int handle_builtin(command_t *cmd) {
+static void
+run_builtin_with_redirection(const command_t *cmd,
+                             void (*builtin_func)(const command_t *)) {
+  int backup_stdin = -1;
+  int backup_stdout = -1;
+
+  // Backup original stdin/stdout
+  backup_stdin = dup(STDIN_FILENO);
+  backup_stdout = dup(STDOUT_FILENO);
+
+  // Input redirection
+  if (cmd->infile) {
+    int fd_in = open(cmd->infile, O_RDONLY);
+    if (fd_in < 0) {
+      perror("open infile");
+      return;
+    }
+    dup2(fd_in, STDIN_FILENO);
+    close(fd_in);
+  }
+
+  // Output redirection
+  if (cmd->outfile) {
+    int flags = O_WRONLY | O_CREAT;
+    flags |= (cmd->append_out) ? O_APPEND : O_TRUNC;
+    int fd_out = open(cmd->outfile, flags, 0644);
+    if (fd_out < 0) {
+      perror("open outfile");
+      return; // same note about restore
+    }
+    dup2(fd_out, STDOUT_FILENO);
+    close(fd_out);
+  }
+
+  // Now run the builtin with the new FDs
+  builtin_func(cmd);
+
+  // Restore original stdin/stdout
+  dup2(backup_stdin, STDIN_FILENO);
+  dup2(backup_stdout, STDOUT_FILENO);
+  close(backup_stdin);
+  close(backup_stdout);
+}
+
+int handle_builtin(const command_t *cmd) {
   const builtin_t *builtin = get_builtin(cmd->name);
   if (builtin == NULL)
     return 0;
 
   if (strcmp(cmd->name, "echo") == 0) {
-    builtin_echo(cmd);
+    run_builtin_with_redirection(cmd, builtin_echo);
     return 1;
   } else if (strcmp(cmd->name, "pwd") == 0) {
-    builtin_pwd();
+    run_builtin_with_redirection(cmd, (void (*)(const command_t *))builtin_pwd);
     return 1;
   } else if (strcmp(cmd->name, "exit") == 0) {
-    builtin_exit(cmd);
+    // 'exit' can't restore FDs if we kill the shell.
+    run_builtin_with_redirection(cmd, builtin_exit);
     return 1;
   } else if (strcmp(cmd->name, "type") == 0) {
-    builtin_type(cmd);
+    run_builtin_with_redirection(cmd, builtin_type);
     return 1;
   } else if (strcmp(cmd->name, "cd") == 0) {
-    builtin_cd(cmd);
+    run_builtin_with_redirection(cmd, builtin_cd);
     return 1;
   }
   return 0; // Not handled

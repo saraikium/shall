@@ -7,6 +7,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,10 @@ typedef struct {
   int argc;
   char *name;
   char **argv;
+  // IO redirection info
+  char *infile;
+  char *outfile;
+  int append_out; // 1 for appending 0 for overwriting
 } command_t;
 
 typedef struct {

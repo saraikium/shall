@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Werror -Wextra -std=c17
+CFLAGS = -Wall -Werror -Wextra -std=c17 -g
 
 # Project structure
 SRC_DIR = src

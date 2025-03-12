@@ -21,12 +21,14 @@ void free_command(command_t *cmd) {
     free(cmd->argv[i]);
   }
   free(cmd->argv);
+  free(cmd->infile);
+  free(cmd->outfile);
   free(cmd);
 }
 
 void handle_input(const char *input) {
   // Step 1: tokenize the input
-  int num_tokens;
+  int num_tokens = 0;
   token_t *tokens = tokenize_input(input, &num_tokens);
   if (!tokens)
     return;
@@ -47,7 +49,7 @@ void handle_input(const char *input) {
 
   char *command_path = find_path(cmd->name);
   if (command_path) {
-    fork_and_exec_cmd(command_path, cmd->argv);
+    fork_and_exec_cmd(cmd, command_path);
   } else {
     fprintf(stderr, "%s: command not found\n", input);
   }
