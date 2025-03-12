@@ -5,6 +5,7 @@
 #define _POSIX_C_SOURCE 200809L
 #define __GNU_SOURCE
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +29,22 @@ typedef struct {
   int max_argc; // Maximum allowed arguments (-1 means no limit)
 } builtin_t;
 
+// Token types for parsing
+typedef enum {
+  TOKEN_WORD,         // Regular command/argument
+  TOKEN_PIPE,         // |
+  TOKEN_REDIR_IN,     // <
+  TOKEN_REDIR_OUT,    // >
+  TOKEN_REDIR_APPEND, // >>
+  TOKEN_BACKGROUND,   // &
+  TOKEN_EOF,          // End of input
+  TOKEN_ERROR         // Invalid token
+} token_type_t;
+
+// Token structure
 typedef struct {
-  char* literal;
+  token_type_t type;
+  char *value;
 } token_t;
 
 #endif /* TYPES_H */

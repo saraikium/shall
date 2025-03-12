@@ -1,5 +1,7 @@
 #include "shall.h"
 #include "builtins.h"
+#include "parser.h"
+#include "shall.h"
 #include "utils.h"
 
 void clean_input(char *input, int buffer_size) {
@@ -9,58 +11,6 @@ void clean_input(char *input, int buffer_size) {
       input[len - 1] = '\0';
     }
   }
-}
-
-command_t *parse_command(const char *input) {
-  // Note: Make a copy of input because strtok modifies it,
-  // fucking C Shenanegans
-  char *input_copy = strdup(input);
-  if (!input_copy) {
-    perror("strdup failed");
-    return NULL;
-  }
-
-  // First, count the number of arguments
-  int arg_count = 0;
-  char *token = strtok(input_copy, " ");
-  while (token) {
-    arg_count++;
-    token = strtok(NULL, " ");
-  }
-
-  // Allocate memory for command_t
-  command_t *cmd = malloc(sizeof(command_t));
-  if (!cmd) {
-    perror("memory allocation failed");
-    free(input_copy);
-    return NULL;
-  }
-
-  cmd->argc = arg_count;
-  // Allocate memory for argv (one extra for NULL termination)
-  cmd->argv = malloc((arg_count + 1) * sizeof(char *));
-  if (!cmd->argv) {
-    perror("malloc failed");
-    free(cmd);
-    free(input_copy);
-    return NULL;
-  }
-
-  // Tokenize again and store arguments
-  strcpy(input_copy, input); // Restore original string
-  token = strtok(input_copy, " ");
-  int i = 0;
-  while (token) {
-    cmd->argv[i++] = strdup(token);
-    token = strtok(NULL, " ");
-  }
-  cmd->argv[i] = NULL; // NULL-terminate argv
-
-  // Set the command name (first argument)
-  cmd->name = cmd->argv[0];
-
-  free(input_copy);
-  return cmd;
 }
 
 // Cleanup function to free allocated memory
@@ -75,12 +25,20 @@ void free_command(command_t *cmd) {
 }
 
 void handle_input(const char *input) {
-  // Handle the exit command
-  command_t *cmd = parse_command(input);
-  if (cmd == NULL) {
+  // Step 1: tokenize the input
+  int num_tokens;
+  token_t *tokens = tokenize_input(input, &num_tokens);
+  if (!tokens)
+    return;
+
+  // Step 2: Parse the command from tokens
+  command_t *cmd = parse_command(tokens, num_tokens);
+  if (!cmd) {
+    fprintf(stderr, "Error parsing command\n");
     return;
   }
 
+  // Step3: Handle execution
   // Check if cmd is a builtin, if it is handle it and return 1 else return 0
   int builtin_handled = handle_builtin(cmd);
 
@@ -93,4 +51,9 @@ void handle_input(const char *input) {
   } else {
     fprintf(stderr, "%s: command not found\n", input);
   }
+
+  // Free tokens
+  free_tokens(tokens, num_tokens);
+  // Free command structure
+  free_command(cmd);
 }
