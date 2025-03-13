@@ -3,7 +3,6 @@
 #include "parser.h"
 #include "shall.h"
 #include "utils.h"
-#include <stdio.h>
 
 void clean_input(char *input, int buffer_size) {
   if (fgets(input, buffer_size, stdin) != NULL) {

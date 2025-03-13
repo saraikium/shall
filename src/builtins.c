@@ -1,8 +1,5 @@
 #include "builtins.h"
 #include "utils.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 // List of built-in commands with min & max argument constraints
 const builtin_t builtin_commands[BUILTIN_COUNT] = {

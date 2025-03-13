@@ -1,6 +1,4 @@
 #include "parser.h"
-#include <stdio.h>
-#include <string.h>
 
 void free_tokens(token_t *tokens, int count) {
   if (!tokens)
