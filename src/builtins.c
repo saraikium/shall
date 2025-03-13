@@ -12,7 +12,7 @@ const builtin_t builtin_commands[BUILTIN_COUNT] = {
 
 int is_builtin(const command_t *cmd) {
   for (int i = 0; i < BUILTIN_COUNT; i++) {
-    if (builtin_commands[i].name == cmd->name) {
+    if (strcmp(builtin_commands[i].name, cmd->name) == 0) {
       return 1;
     }
   }

@@ -87,7 +87,7 @@ static void execute_cmd(const command_t *cmd) {
   if (!cmd || !cmd->name)
     return;
 
-  if (is_builtin(cmd)) {
+  if (is_builtin(cmd) == 1) {
     run_builtin(cmd);
   } else {
     run_external_cmd(cmd);
@@ -109,6 +109,7 @@ void handle_input(const char *input) {
   // Step 2: Parse the command from tokens
   int num_cmds = 0;
   command_t **cmd_list = parse_commands(tokens, num_tokens, &num_cmds);
+
   if (!cmd_list) {
     fprintf(stderr, "Error parsing commands\n");
     free_tokens(tokens, num_tokens);
