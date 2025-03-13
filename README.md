@@ -11,7 +11,7 @@ Posix compliant unix shell written in C
 - [x] Builtin commands like `cd`, `pwd`, `exit` and `type`
 - [x] I/O redirection
 - [x] Parallel execution of commands
-- []  Tab completions
+- [ ] Tab completions
 
 ## License
 MIT
