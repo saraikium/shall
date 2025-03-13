@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "shall.h"
 #include "utils.h"
+#include <stdio.h>
 
 static pid_t g_child_pids[MAX_CMDS];
 static int g_pid_count = 0;
@@ -113,6 +114,9 @@ void run_external_cmd(const command_t *cmd) {
       exit(EXIT_FAILURE);
     }
     execv(path, cmd->argv);
+    // Exec failed. Alas
+    perror("exev");
+    exit(EXIT_FAILURE);
   } else {
     if (cmd->background) {
       g_child_pids[g_pid_count++] = pid;
