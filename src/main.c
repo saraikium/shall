@@ -6,8 +6,8 @@ int main(void) {
     // Flush after every printf
     fflush(stdout);
     // Wait for user input
-    char input[100];
-    clean_input(input, 100);
+    char input[4096];
+    clean_input(input, 4096);
 
     handle_input(input);
   }

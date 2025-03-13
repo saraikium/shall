@@ -11,9 +11,7 @@ void free_tokens(token_t *tokens, int count) {
 
 // Tokenizer: Splits input into structured tokens
 token_t *tokenize_input(const char *input, int *num_tokens) {
-
   token_t *tokens = malloc(MAX_TOKENS * sizeof(token_t));
-
   if (!tokens) {
     perror("malloc");
     return NULL;
@@ -81,6 +79,7 @@ token_t *tokenize_input(const char *input, int *num_tokens) {
         }
       }
       *buf_ptr++ = *ptr++;
+      // Append end-of-input token
     }
     *buf_ptr = '\0';
 
@@ -111,37 +110,55 @@ token_t *tokenize_input(const char *input, int *num_tokens) {
     if (token_count >= MAX_TOKENS)
       break;
   }
+  tokens[token_count++] = (token_t){TOKEN_EOF, NULL};
   *num_tokens = token_count;
   return tokens;
 }
 
 // Converts tokens into a command_t structure
-command_t *parse_command(token_t *tokens, int num_tokens) {
+command_t **parse_commands(token_t *tokens, int num_tokens, int *num_commands) {
   if (num_tokens == 0)
     return NULL;
 
-  command_t *cmd = malloc(sizeof(command_t));
-  if (!cmd) {
+  command_t **commands = malloc((num_tokens + 1) * sizeof(command_t *));
+  if (!commands) {
     perror("malloc failed");
     return NULL;
   }
 
-  memset(cmd, 0, sizeof(command_t));
-  cmd->infile = NULL;
-  cmd->outfile = NULL;
-  cmd->append_out = 0;
-  cmd->argc = 0;
-  cmd->argv = malloc((num_tokens + 1) * sizeof(char *));
-
-  if (!cmd->argv) {
-    perror("malloc failed");
-    free(cmd);
-    return NULL;
-  }
-
-  // Extract arguments
+  int cmd_index = 0;
+  command_t *cmd = NULL;
   int argc = 0;
   for (int i = 0; i < num_tokens; i++) {
+    if (!cmd) {
+      cmd = malloc(sizeof(command_t));
+      if (cmd == NULL) {
+        perror("Memory allocation failed");
+        return NULL;
+      }
+      memset(cmd, 0, sizeof(command_t));
+      cmd->argv = malloc((num_tokens + 1) * sizeof(char *));
+      if (cmd->argv == NULL) {
+        perror("Memory Allocation failed");
+        return NULL;
+      }
+      cmd->argc = 0;
+      cmd->background = 0;
+    }
+
+    if (tokens[i].type == TOKEN_BACKGROUND) {
+      if (cmd) {
+        cmd->argv[argc] = NULL;
+        cmd->name = cmd->argv[0];
+        cmd->argc = argc;
+        cmd->background = 1;
+        commands[cmd_index++] = cmd;
+      }
+      cmd = NULL;
+      argc = 0;
+      continue;
+    }
+
     switch (tokens[i].type) {
     case TOKEN_WORD:
       cmd->argv[argc++] = strdup(tokens[i].value);
@@ -171,15 +188,22 @@ command_t *parse_command(token_t *tokens, int num_tokens) {
         fprintf(stderr, "Syntax error: expected file after '>>'\n");
       }
       break;
+    case TOKEN_EOF:
+      if (cmd) {
+        cmd->argv[argc] = NULL;
+        cmd->argc = argc;
+        cmd->name = cmd->argv[0];
+        commands[cmd_index++] = cmd;
+        cmd = NULL;
+      }
+      break;
     default:
-      // Ignore other values for now
       break;
     }
   }
 
-  cmd->argv[argc] = NULL;   // Null terminate
-  cmd->name = cmd->argv[0]; // First argument is command name
-  cmd->argc = argc;
+  commands[cmd_index] = NULL;
+  *num_commands = cmd_index;
 
-  return cmd;
+  return commands;
 }

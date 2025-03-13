@@ -26,6 +26,8 @@ typedef struct {
   char *infile;
   char *outfile;
   int append_out; // 1 for appending 0 for overwriting
+
+  int background; // Determines if the process should run in background
 } command_t;
 
 typedef struct {
