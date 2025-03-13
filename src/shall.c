@@ -3,7 +3,6 @@
 #include "parser.h"
 #include "shall.h"
 #include "utils.h"
-#include <stdio.h>
 
 static pid_t g_child_pids[MAX_CMDS];
 static int g_pid_count = 0;
@@ -15,48 +14,6 @@ void clean_input(char *input, int buffer_size) {
       input[len - 1] = '\0';
     }
   }
-}
-
-// Cleanup function to free allocated memory
-void free_command(command_t *cmd) {
-  if (cmd == NULL)
-    return;
-  // Free argv array safely
-  if (cmd->argv) {
-    for (int i = 0; cmd->argv[i] != NULL; i++) {
-      free(cmd->argv[i]);
-      cmd->argv[i] = NULL; // Prevent dangling pointer
-    }
-    free(cmd->argv);
-    cmd->argv = NULL;
-  }
-
-  // Free infile if it was allocated
-  if (cmd->infile) {
-    free(cmd->infile);
-    cmd->infile = NULL;
-  }
-
-  // Free outfile if it was allocated
-  if (cmd->outfile) {
-    free(cmd->outfile);
-    cmd->outfile = NULL;
-  }
-
-  free(cmd);  // Free the struct itself
-  cmd = NULL; // Prevent accidental use after free
-}
-
-void free_commands(command_t **cmd_list, int num_commands) {
-  if (!cmd_list)
-    return;
-
-  for (int i = 0; i < num_commands; i++) {
-    if (cmd_list[i]) {
-      free_command(cmd_list[i]);
-    }
-  }
-  free(cmd_list);
 }
 
 static void run_builtin(const command_t *cmd) {
@@ -149,7 +106,6 @@ void handle_input(const char *input) {
   token_t *tokens = tokenize_input(input, &num_tokens);
   if (!tokens)
     return;
-
   // Step 2: Parse the command from tokens
   int num_cmds = 0;
   command_t **cmd_list = parse_commands(tokens, num_tokens, &num_cmds);

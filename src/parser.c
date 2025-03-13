@@ -9,6 +9,48 @@ void free_tokens(token_t *tokens, int count) {
   free(tokens);
 }
 
+// Cleanup function to free allocated memory
+void free_command(command_t *cmd) {
+  if (cmd == NULL)
+    return;
+  // Free argv array safely
+  if (cmd->argv) {
+    for (int i = 0; cmd->argv[i] != NULL; i++) {
+      free(cmd->argv[i]);
+      cmd->argv[i] = NULL; // Prevent dangling pointer
+    }
+    free(cmd->argv);
+    cmd->argv = NULL;
+  }
+
+  // Free infile if it was allocated
+  if (cmd->infile) {
+    free(cmd->infile);
+    cmd->infile = NULL;
+  }
+
+  // Free outfile if it was allocated
+  if (cmd->outfile) {
+    free(cmd->outfile);
+    cmd->outfile = NULL;
+  }
+
+  free(cmd);  // Free the struct itself
+  cmd = NULL; // Prevent accidental use after free
+}
+
+void free_commands(command_t **cmd_list, int num_commands) {
+  if (!cmd_list)
+    return;
+
+  for (int i = 0; i < num_commands; i++) {
+    if (cmd_list[i]) {
+      free_command(cmd_list[i]);
+    }
+  }
+  free(cmd_list);
+}
+
 // Tokenizer: Splits input into structured tokens
 token_t *tokenize_input(const char *input, int *num_tokens) {
   token_t *tokens = malloc(MAX_TOKENS * sizeof(token_t));
@@ -31,6 +73,7 @@ token_t *tokenize_input(const char *input, int *num_tokens) {
     char *buffer = malloc(MAX_ARG_LENGTH);
     if (!buffer) {
       perror("Memory allocation failed");
+      free_tokens(tokens, token_count);
       return NULL;
     }
 
@@ -109,7 +152,9 @@ token_t *tokenize_input(const char *input, int *num_tokens) {
     if (token_count >= MAX_TOKENS)
       break;
   }
-  tokens[token_count] = (token_t){TOKEN_EOF, NULL};
+  if (token_count < MAX_TOKENS) {
+    tokens[token_count] = (token_t){TOKEN_EOF, NULL};
+  }
   *num_tokens = token_count;
   return tokens;
 }
@@ -128,16 +173,19 @@ command_t **parse_commands(token_t *tokens, int num_tokens, int *num_commands) {
   int cmd_index = 0;
   command_t *cmd = NULL;
   int argc = 0;
+
   for (int i = 0; i < num_tokens; i++) {
     if (!cmd) {
       cmd = malloc(sizeof(command_t));
       if (cmd == NULL) {
+        free_commands(commands, cmd_index);
         perror("Memory allocation failed");
         return NULL;
       }
       memset(cmd, 0, sizeof(command_t));
       cmd->argv = malloc((num_tokens + 1) * sizeof(char *));
       if (cmd->argv == NULL) {
+        free_commands(commands, cmd_index);
         perror("Memory Allocation failed");
         return NULL;
       }
@@ -145,7 +193,8 @@ command_t **parse_commands(token_t *tokens, int num_tokens, int *num_commands) {
       cmd->background = 0;
     }
 
-    if (tokens[i].type == TOKEN_BACKGROUND) {
+    switch (tokens[i].type) {
+    case TOKEN_BACKGROUND:
       if (cmd) {
         cmd->argv[argc] = NULL;
         cmd->name = cmd->argv[0];
@@ -156,9 +205,7 @@ command_t **parse_commands(token_t *tokens, int num_tokens, int *num_commands) {
       cmd = NULL;
       argc = 0;
       continue;
-    }
-
-    switch (tokens[i].type) {
+      break;
     case TOKEN_WORD:
       cmd->argv[argc++] = strdup(tokens[i].value);
       break;
@@ -187,6 +234,7 @@ command_t **parse_commands(token_t *tokens, int num_tokens, int *num_commands) {
         fprintf(stderr, "Syntax error: expected file after '>>'\n");
       }
       break;
+
     case TOKEN_EOF:
       if (cmd) {
         cmd->argv[argc] = NULL;
