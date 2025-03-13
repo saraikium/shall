@@ -153,7 +153,7 @@ token_t *tokenize_input(const char *input, int *num_tokens) {
       break;
   }
   if (token_count < MAX_TOKENS) {
-    tokens[token_count] = (token_t){TOKEN_EOF, NULL};
+    tokens[token_count++] = (token_t){TOKEN_EOF, NULL};
   }
   *num_tokens = token_count;
   return tokens;
