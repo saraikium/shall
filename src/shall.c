@@ -3,8 +3,6 @@
 #include "parser.h"
 #include "shall.h"
 #include "utils.h"
-#include <stdio.h>
-#include <sys/wait.h>
 
 static pid_t g_child_pids[MAX_CMDS];
 static int g_pid_count = 0;
