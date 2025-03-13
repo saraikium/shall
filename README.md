@@ -8,10 +8,10 @@ Posix compliant unix shell written in C
 - You can run the shell using `./build/shall`
 
 ## Features
-[x] Builtin commands like `cd`, `pwd`, `exit` and `type`
-[x] I/O redirection
-[x] Parallel execution of commands
-[]  Tab completions
+- [x] Builtin commands like `cd`, `pwd`, `exit` and `type`
+- [x] I/O redirection
+- [x] Parallel execution of commands
+- []  Tab completions
 
 ## License
 MIT
