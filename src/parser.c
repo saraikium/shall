@@ -60,7 +60,7 @@ token_t *tokenize_input(const char *input, int *num_tokens) {
         continue;
       }
 
-      // If we encounter a psace outside quotes it's the end of the token
+      // If we encounter a space outside quotes it's the end of the token
       if (isspace(c) && !in_single_quotes && !in_double_quotes) {
         break;
       }
@@ -79,7 +79,6 @@ token_t *tokenize_input(const char *input, int *num_tokens) {
         }
       }
       *buf_ptr++ = *ptr++;
-      // Append end-of-input token
     }
     *buf_ptr = '\0';
 
@@ -110,7 +109,7 @@ token_t *tokenize_input(const char *input, int *num_tokens) {
     if (token_count >= MAX_TOKENS)
       break;
   }
-  tokens[token_count++] = (token_t){TOKEN_EOF, NULL};
+  tokens[token_count] = (token_t){TOKEN_EOF, NULL};
   *num_tokens = token_count;
   return tokens;
 }
